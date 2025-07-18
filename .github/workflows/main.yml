@@ -25,11 +25,9 @@ jobs:
         run: flutter pub get
       - name: Build
         run: flutter build apk --release
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
         #9 Upload Artifacts
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Releases
           path: |
