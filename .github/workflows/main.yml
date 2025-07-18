@@ -39,34 +39,39 @@ jobs:
           path: |
             build/app/outputs/flutter-apk/app-release.apk
 
-        #10 Extract Version
       - name: Extract version from pubspec.yaml
         id: extract_version
         run: |
           version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
-          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_OUTPUT
 
-        #11 Check if Tag Exists
       - name: Check if Tag Exists
         id: check_tag
         run: |
-          if git rev-parse "v${{ env.VERSION }}" >/dev/null 2>&1; then
-            echo "TAG_EXISTS=true" >> $GITHUB_ENV
+          if git rev-parse "v${{ steps.extract_version.outputs.version }}" >/dev/null 2>&1; then
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
           else
-            echo "TAG_EXISTS=false" >> $GITHUB_ENV
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
           fi
 
-        #12 Modify Tag if it Exists
       - name: Modify Tag
-        if: env.TAG_EXISTS == 'true'
+        if: steps.check_tag.outputs.tag_exists == 'true'
         id: modify_tag
         run: |
-          new_version="${{ env.VERSION }}-build-${{ github.run_number }}"
-          echo "VERSION=$new_version" >> $GITHUB_ENV
+          new_version="${{ steps.extract_version.outputs.version }}-build-${{ github.run_number }}"
+          echo "version=$new_version" >> $GITHUB_OUTPUT
         
-        #13 Create Release
+      - name: Set Release Version
+        id: set_release_version
+        run: |
+          if [ "${{ steps.check_tag.outputs.tag_exists }}" = "true" ]; then
+            echo "version=${{ steps.modify_tag.outputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ steps.extract_version.outputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
           artifacts: "build/app/outputs/flutter-apk/app-release.apk"
-          tag: v${{ env.VERSION }}
+          tag: v${{ steps.set_release_version.outputs.version }}
