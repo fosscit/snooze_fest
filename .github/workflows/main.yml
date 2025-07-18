@@ -18,7 +18,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version-file: pubspec.yaml # path to pubspec.yaml
       - run: flutter --version
         #4 Install Dependencies
       - name: Install Dependencies
