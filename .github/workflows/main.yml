@@ -14,24 +14,6 @@ on:
     types: [created]
 
 jobs:
-  build:
-    # This job now only builds and tests on pushes/PRs to main.
-    # It does NOT release.
-    name: Build & Verify
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-      - run: flutter --version
-      - name: Install Dependencies
-        run: flutter pub get
-      - name: Build APK (for verification)
-        run: flutter build apk
-
   create-release:
     # This job only runs when a release is created (i.e., a tag is pushed)
     name: Build & Release
