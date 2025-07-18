@@ -1,16 +1,41 @@
-name : Build and Release
+name: Build and Release
 
 on:
+  # Run on pushes to main to ensure it builds correctly
+  push:
+    branches:
+      - main
+  # Run on pull requests to main for validation
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main 
+  # Trigger the release job ONLY when a new tag is pushed
+  release:
+    types: [created]
 
 jobs:
   build:
+    # This job now only builds and tests on pushes/PRs to main.
+    # It does NOT release.
+    name: Build & Verify
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter --version
+      - name: Install Dependencies
+        run: flutter pub get
+      - name: Build APK (for verification)
+        run: flutter build apk
+
+  create-release:
+    # This job only runs when a release is created (i.e., a tag is pushed)
     name: Build & Release
+    if: github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,48 +55,15 @@ jobs:
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "storeFile=keystore.jks" >> android/key.properties
-      - name: Build
+      - name: Build Release APK
         run: flutter build apk --release
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Releases
-          path: |
-            build/app/outputs/flutter-apk/app-release.apk
-
-      - name: Extract version from pubspec.yaml
-        id: extract_version
-        run: |
-          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
-          echo "version=$version" >> $GITHUB_OUTPUT
-
-      - name: Check if Tag Exists
-        id: check_tag
-        run: |
-          if git rev-parse "v${{ steps.extract_version.outputs.version }}" >/dev/null 2>&1; then
-            echo "tag_exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "tag_exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Modify Tag
-        if: steps.check_tag.outputs.tag_exists == 'true'
-        id: modify_tag
-        run: |
-          new_version="${{ steps.extract_version.outputs.version }}-build-${{ github.run_number }}"
-          echo "version=$new_version" >> $GITHUB_OUTPUT
-        
-      - name: Set Release Version
-        id: set_release_version
-        run: |
-          if [ "${{ steps.check_tag.outputs.tag_exists }}" = "true" ]; then
-            echo "version=${{ steps.modify_tag.outputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "version=${{ steps.extract_version.outputs.version }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create Release
+      
+      - name: Update Release with Artifact
         uses: ncipollo/release-action@v1
         with:
+          # This allows the action to find the release that triggered the workflow
+          allowUpdates: true 
+          # The artifact to upload
           artifacts: "build/app/outputs/flutter-apk/app-release.apk"
-          tag: v${{ steps.set_release_version.outputs.version }}
+          # Your GitHub token
+          token: ${{ secrets.GITHUB_TOKEN }}
