@@ -1,19 +1,16 @@
 # snooze_fest
----
 
 An alarm application with tasks , <br/>
 to help you wake up at all costs!
 
 
 # Installation
-----
 snooze_fest is currently built for android only
 
 Check out the [releases]() section to download the apk file
 
 
 # Building and Testing
----
 
 +  Clone the project 
     - Using SSH : 
@@ -59,6 +56,6 @@ Check out the [releases]() section to download the apk file
             ```
 # Contributions
 
-    We are open for contributions , do send us a pull request with your changes
+We are open for contributions , do send us a pull request with your changes
 
 
