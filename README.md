@@ -2,7 +2,7 @@
 
 An alarm application with tasks 
 # Installation
-snooze_fest is currently built for android only
+snooze_fest is currently built for android
 
 Check out the [releases]() section to download the apk file
 
