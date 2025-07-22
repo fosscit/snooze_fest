@@ -4,7 +4,7 @@ An alarm application with tasks
 # Installation
 snooze_fest is currently built for android
 
-Check out the [releases]() section to download the apk file
+Check out the [releases](https://github.com/fosscit/snooze_fest/releases) section to download the apk file
 
 
 # Building and Testing
